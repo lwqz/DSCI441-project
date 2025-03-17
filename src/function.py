@@ -3,23 +3,40 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 
-def pixel_art(frame, num_clusters=10, scale=4):
+def pixel_art(frame, num_clusters=20, scale=8):
+    '''
+    frame: The individual frame of a video file (frames list accessed in a for loop)
+    num_clusters: The total number of different colors in each frame
+    scale: Each "square" in an output frame has scale x scale pixels (scale=8 means 8x8 pixels)
+
+    '''
+
     img = cv2.imread(frame)
-    if img is None:
-        raise FileNotFoundError(f"无法加载图片: {frame}")
-
-    # 颜色聚类
-    flattened_img = img.reshape((-1, 3))
-    kmeans = KMeans(n_clusters=num_clusters, n_init='auto', random_state=42)
+    # Combine the height and width dimensions so that kmeans can read the data
+    flattened_img = img.reshape([int(img.shape[0] * img.shape[1]), img.shape[2]])
+    # Initialize and fit kmeans clustering algorithm
+    kmeans = KMeans(n_clusters=num_clusters)
     kmeans.fit(flattened_img)
-    cluster_colors = np.round(kmeans.cluster_centers_).astype(np.uint8)
+    final_clusters = np.round(kmeans.cluster_centers_).astype(np.uint8)
 
-    # 缩小 & 量化
-    small_img = cv2.resize(img, (img.shape[1] // scale, img.shape[0] // scale))
-    labels = kmeans.predict(small_img.reshape((-1, 3)))
-    new_img = cluster_colors[labels].reshape(small_img.shape)
+    # Get the rescaled frame dimensions depending on the scale
+    frame_resized = cv2.resize(img, (int(img.shape[1] / scale), int(img.shape[0] / scale)))
+    # Combine the height and width dimensions so that kmeans can read the data
+    resized_flattened = frame_resized.reshape(
+        [int(frame_resized.shape[0] * frame_resized.shape[1]), frame_resized.shape[2]]
+    )
+    clusters = kmeans.predict(resized_flattened)
+    new_img = final_clusters[clusters].reshape(frame_resized.shape) / 255
 
-    # 放大 & 还原像素风格
-    pixel_art_img = cv2.resize(new_img, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
+    canvas = np.empty(img.shape)
+    # Paint the canvas with the correct cluster point
+    for y in range(frame_resized.shape[0]):
+        for x in range(frame_resized.shape[1]):
+            ix = int(scale * x)
+            iy = int(scale * y)
+            ix_ = int(scale * (x + 1))
+            iy_ = int(scale * (y + 1))
+            color = new_img[y, x]
+            canvas[iy:iy_, ix:ix_] = color
 
-    return pixel_art_img
+    return canvas
