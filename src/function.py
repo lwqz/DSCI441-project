@@ -3,40 +3,46 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 
-def pixel_art(frame, num_clusters=20, scale=8):
-    '''
-    frame: The individual frame of a video file (frames list accessed in a for loop)
-    num_clusters: The total number of different colors in each frame
-    scale: Each "square" in an output frame has scale x scale pixels (scale=8 means 8x8 pixels)
+def pixel_art(image_path: str, num_clusters: int = 20, scale: int = 8) -> np.ndarray:
+    """
+    Generate pixel art from an input image.
 
-    '''
+    Args:
+        image_path (str): Path to the input image.
+        num_clusters (int): Number of colors for quantization (default: 20).
+        scale (int): Size of each pixel block (default: 8x8).
 
-    img = cv2.imread(frame)
-    # Combine the height and width dimensions so that kmeans can read the data
-    flattened_img = img.reshape([int(img.shape[0] * img.shape[1]), img.shape[2]])
-    # Initialize and fit kmeans clustering algorithm
-    kmeans = KMeans(n_clusters=num_clusters)
-    kmeans.fit(flattened_img)
-    final_clusters = np.round(kmeans.cluster_centers_).astype(np.uint8)
+    Returns:
+        np.ndarray: Pixel art image in BGR format.
+    """
+    # Load the image
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError(f"Failed to load image: {image_path}")
 
-    # Get the rescaled frame dimensions depending on the scale
-    frame_resized = cv2.resize(img, (int(img.shape[1] / scale), int(img.shape[0] / scale)))
-    # Combine the height and width dimensions so that kmeans can read the data
-    resized_flattened = frame_resized.reshape(
-        [int(frame_resized.shape[0] * frame_resized.shape[1]), frame_resized.shape[2]]
-    )
-    clusters = kmeans.predict(resized_flattened)
-    new_img = final_clusters[clusters].reshape(frame_resized.shape) / 255
+    # Color quantization using K-means
+    flattened_img = img.reshape(-1, 3)  # Flatten to (height*width, 3)
+    kmeans = KMeans(n_clusters=num_clusters, n_init=10)  # Initialize K-means
+    kmeans.fit(flattened_img)  # Fit the model
+    final_clusters = np.round(kmeans.cluster_centers_).astype(np.uint8)  # Get color palette
 
-    canvas = np.empty(img.shape)
-    # Paint the canvas with the correct cluster point
+    # Downsample the image
+    frame_resized = cv2.resize(img,
+                             (img.shape[1] // scale, img.shape[0] // scale),
+                             interpolation=cv2.INTER_NEAREST)  # Nearest-neighbor interpolation
+    resized_flattened = frame_resized.reshape(-1, 3)  # Flatten the resized image
+    clusters = kmeans.predict(resized_flattened)  # Predict color labels
+    new_img = final_clusters[clusters].reshape(frame_resized.shape)  # Map labels to colors
+
+    # Create the pixel art canvas
+    canvas = np.zeros_like(img, dtype=np.uint8)  # Initialize canvas with the same size as input
     for y in range(frame_resized.shape[0]):
         for x in range(frame_resized.shape[1]):
-            ix = int(scale * x)
-            iy = int(scale * y)
-            ix_ = int(scale * (x + 1))
-            iy_ = int(scale * (y + 1))
-            color = new_img[y, x]
-            canvas[iy:iy_, ix:ix_] = color
+            x_start = scale * x  # Start x-coordinate of the block
+            y_start = scale * y  # Start y-coordinate of the block
+            x_end = scale * (x + 1)  # End x-coordinate of the block
+            y_end = scale * (y + 1)  # End y-coordinate of the block
+            color = new_img[y, x].astype(np.uint8)  # Get the quantized color
+            canvas[y_start:y_end, x_start:x_end] = color  # Fill the block with the color
 
     return canvas
