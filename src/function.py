@@ -3,14 +3,14 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 
-def pixel_art(image_path: str, num_clusters: int = 20, scale: int = 8) -> np.ndarray:
+def pixel_art(image_path, num_clusters=20, block_size=8) -> np.ndarray:
     """
     Generate pixel art from an input image.
 
     Args:
         image_path (str): Path to the input image.
         num_clusters (int): Number of colors for quantization (default: 20).
-        scale (int): Size of each pixel block (default: 8x8).
+        block_size (int): Size of each pixel block (default: 8x8).
 
     Returns:
         np.ndarray: Pixel art image in BGR format.
@@ -28,7 +28,7 @@ def pixel_art(image_path: str, num_clusters: int = 20, scale: int = 8) -> np.nda
 
     # Downsample the image
     frame_resized = cv2.resize(img,
-                             (img.shape[1] // scale, img.shape[0] // scale),
+                             (img.shape[1] // block_size, img.shape[0] // block_size),
                              interpolation=cv2.INTER_NEAREST)  # Nearest-neighbor interpolation
     resized_flattened = frame_resized.reshape(-1, 3)  # Flatten the resized image
     clusters = kmeans.predict(resized_flattened)  # Predict color labels
@@ -38,10 +38,10 @@ def pixel_art(image_path: str, num_clusters: int = 20, scale: int = 8) -> np.nda
     canvas = np.zeros_like(img, dtype=np.uint8)  # Initialize canvas with the same size as input
     for y in range(frame_resized.shape[0]):
         for x in range(frame_resized.shape[1]):
-            x_start = scale * x  # Start x-coordinate of the block
-            y_start = scale * y  # Start y-coordinate of the block
-            x_end = scale * (x + 1)  # End x-coordinate of the block
-            y_end = scale * (y + 1)  # End y-coordinate of the block
+            x_start = block_size * x  # Start x-coordinate of the block
+            y_start = block_size * y  # Start y-coordinate of the block
+            x_end = block_size * (x + 1)  # End x-coordinate of the block
+            y_end = block_size * (y + 1)  # End y-coordinate of the block
             color = new_img[y, x].astype(np.uint8)  # Get the quantized color
             canvas[y_start:y_end, x_start:x_end] = color  # Fill the block with the color
 
