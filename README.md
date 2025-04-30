@@ -7,6 +7,8 @@ Python 3.8+
 scikit-learn  
 matplotlib  
 numpy  
+streamlit  
+opencv-python-headless
 
 Key Features  
 Convert Images to Pixel Art  
@@ -17,6 +19,6 @@ Nearest-Neighbor Interpolation
 
 Future Improvements  
 Predefined Retro Color Palettes  
-Edge Detection & Outlining  
-Real-Time Video Processing – Optimize performance for fast video-to-pixel-art conversion.  
-Web-Based Version – Run PixelCraft directly in the browser.
+Real-Time Video Processing – Optimize performance for fast video-to-pixel-art conversion.
+
+Input streamlit run app.py in the terminal or visit https://dsci441-project-doqqfhfbzyanjh669xeugm.streamlit.app/ to start
