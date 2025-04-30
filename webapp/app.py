@@ -14,22 +14,17 @@ with st.sidebar:
     num_colors = st.slider(
         "Color Count",
         min_value=4,
-        max_value=32,
+        max_value=16,
         value=8,
         help="Recommended: 8-16 colors for retro style"
     )
     pixel_size = st.slider(
         "Pixel Size",
-        min_value=4,
+        min_value=2,
         max_value=32,
-        value=8,
-        step=4,
+        value=4,
+        step=2,
         help="Size of each pixel block"
-    )
-    enable_outline = st.checkbox(
-        "Enable Outlines",
-        value=True,
-        help="Add classic game-style black borders"
     )
     enhance_contrast = st.checkbox(
         "Enhance Contrast",
@@ -55,8 +50,7 @@ if uploaded_file is not None:
         processed_image = generate_pixel_art(
             original_image,
             num_colors=num_colors,
-            pixel_size=pixel_size,
-            enable_outline=enable_outline
+            pixel_size=pixel_size
         )
         if enhance_contrast:
             processed_image = cv2.convertScaleAbs(

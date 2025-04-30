@@ -6,8 +6,7 @@ from sklearn.cluster import KMeans
 def generate_pixel_art(
         image: np.ndarray,
         num_colors: int = 8,
-        pixel_size: int = 8,
-        enable_outline: bool = False
+        pixel_size: int = 4,
 ) -> np.ndarray:
     """
     Convert an input image to pixel art style
@@ -16,7 +15,6 @@ def generate_pixel_art(
         image: Input image in BGR format
         num_colors: Number of colors for quantization (4-32)
         pixel_size: Size of each pixel block (4-32)
-        enable_outline: Whether to add retro game-style outlines
 
     Returns:
         Pixel art image in BGR format
@@ -52,11 +50,5 @@ def generate_pixel_art(
             x_start = x * pixel_size
             x_end = (x + 1) * pixel_size
             canvas[y_start:y_end, x_start:x_end] = quantized_image[y, x]
-
-    # Outline enhancement
-    if enable_outline:
-        grayscale = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(grayscale, threshold1=50, threshold2=150)
-        canvas[edges != 0] = [0, 0, 0]  # Black outlines
 
     return canvas
